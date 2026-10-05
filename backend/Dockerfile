@@ -7,4 +7,4 @@ RUN composer install --no-interaction --prefer-dist --no-dev --no-progress --no-
 COPY . .
 RUN php artisan package:discover --ansi
 EXPOSE 8000
-CMD ["sh", "-c", "php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=${PORT:-8000}"]
+CMD ["sh", "-c", "php artisan package:discover --ansi && php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=${PORT:-8000}"]
