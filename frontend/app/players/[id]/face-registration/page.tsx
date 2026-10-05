@@ -19,7 +19,7 @@ import {
   FaceDetails,
   detectSingleFace 
 } from '@/lib/faceService';
-import { saveFaceData, getFaceData, StoredFaceData } from '@/lib/faceStore';
+import { saveFaceData, getFaceStatus, FaceStatus } from '@/lib/faceStore';
 import { getPlayer } from '@/lib/api';
 import { updateStoredPlayer, PlayerData } from '@/lib/dataStore';
 import type { Player } from '@/types/player';
@@ -76,7 +76,7 @@ export default function FaceRegistrationPage() {
   const playerId = params.id as string;
 
   const [player, setPlayer] = useState<PlayerData | null>(null);
-  const [existingFaceData, setExistingFaceData] = useState<StoredFaceData | null>(null);
+  const [existingFaceData, setExistingFaceData] = useState<FaceStatus | null>(null);
   
   // Modes: 'loading' | 'existing_prompt' | 'enrolling' | 'upload_mode' | 'success'
   const [mode, setMode] = useState<'loading' | 'existing_prompt' | 'enrolling' | 'upload_mode' | 'success'>('loading');
@@ -174,10 +174,10 @@ export default function FaceRegistrationPage() {
       }
       if (mounted) setPlayer(p);
 
-      // Check existing face registration
+      // Check existing face registration (server = shared across devices)
       try {
-        const existing = await getFaceData(playerId);
-        if (existing && existing.descriptors.length > 0 && mounted) {
+        const existing = await getFaceStatus(playerId);
+        if (existing.registered && mounted) {
           setExistingFaceData(existing);
           setMode('existing_prompt');
         } else if (mounted) {
@@ -286,9 +286,6 @@ export default function FaceRegistrationPage() {
     stopCamera();
 
     try {
-      triggerAudioCue(1046, 0.25); // high celebratory chime
-      triggerHaptic(80);
-
       // Best frontal photo becomes the player's avatar
       const frontalCapture = allCaptures.find(c => c.isFrontal) || allCaptures[0];
       const avatarPhoto = frontalCapture?.photo || null;
@@ -296,35 +293,38 @@ export default function FaceRegistrationPage() {
       const descriptorArrays = allCaptures.map(c => Array.from(c.descriptor));
       const photos = allCaptures.map(c => c.photo);
 
-      // Save to IndexedDB
-      await saveFaceData({
+      // Save to server (shared with phone/kiosk) + local cache
+      const saved = await saveFaceData({
         playerId,
         playerName: player?.name || '',
         jersey: player?.jersey || '',
         descriptors: descriptorArrays,
         trainingPhotos: photos,
         registeredAt: new Date().toISOString(),
+      }, avatarPhoto);
+
+      const finalAvatar = saved.photo || avatarPhoto;
+      updateStoredPlayer(playerId, {
+        faceRegistered: true,
+        ...(finalAvatar ? { avatarUrl: finalAvatar } : {}),
       });
+      if (finalAvatar) setSavedAvatarUrl(finalAvatar);
 
-      // Update Player Profile in Local DataStore & Sync to server
-      if (avatarPhoto) {
-        updateStoredPlayer(playerId, {
-          faceRegistered: true,
-          avatarUrl: avatarPhoto,
-        });
-        setSavedAvatarUrl(avatarPhoto);
-      } else {
-        updateStoredPlayer(playerId, { faceRegistered: true });
-      }
-
+      triggerAudioCue(1046, 0.25); // high celebratory chime
+      triggerHaptic(80);
       setMode('success');
     } catch (err) {
       console.error('Error saving enrolled face:', err);
-      setCameraError('Gagal menyimpan data biometrik. Coba lagi.');
+      setCaptures([]);
+      capturesRef.current = [];
+      setStepIndex(0);
+      setMode('enrolling');
+      startCamera(); // clears cameraError synchronously, so set the message afterwards
+      setCameraError('Gagal menyimpan data biometrik ke server. Periksa koneksi internet lalu coba lagi.');
     } finally {
       setIsSaving(false);
     }
-  }, [isSaving, playerId, player, stopCamera, triggerAudioCue, triggerHaptic]);
+  }, [isSaving, playerId, player, stopCamera, startCamera, triggerAudioCue, triggerHaptic]);
 
   // 4. CONTINUOUS AUTOMATIC DETECTION & CAPTURE ENGINE
   useEffect(() => {
@@ -649,16 +649,14 @@ export default function FaceRegistrationPage() {
 
               <h2 className="text-xl font-bold text-white mb-1">Wajah Sudah Terdaftar</h2>
               <p className="text-sm text-dark-300 mb-6 leading-relaxed">
-                Pemain <span className="text-emerald-400 font-semibold">{player.name}</span> sudah memiliki <span className="font-semibold text-white">{existingFaceData.descriptors.length} sampel biometrik</span> tersimpan di database lokal.
+                Pemain <span className="text-emerald-400 font-semibold">{player.name}</span> sudah memiliki <span className="font-semibold text-white">{existingFaceData.samples} sampel biometrik</span> tersimpan di server dan bisa dikenali dari semua perangkat (laptop &amp; HP).
               </p>
 
-              {existingFaceData.trainingPhotos && existingFaceData.trainingPhotos.length > 0 && (
-                <div className="flex justify-center gap-2 mb-6">
-                  {existingFaceData.trainingPhotos.slice(0, 4).map((p, i) => (
-                    <div key={i} className="w-14 h-14 rounded-xl overflow-hidden border border-emerald-500/40">
-                      <img src={p} alt={`Sampel ${i}`} className="w-full h-full object-cover" />
-                    </div>
-                  ))}
+              {existingFaceData.photo && (
+                <div className="flex justify-center mb-6">
+                  <div className="w-20 h-20 rounded-2xl overflow-hidden border-2 border-emerald-500/40">
+                    <img src={existingFaceData.photo} alt={`Foto ${player.name}`} className="w-full h-full object-cover" />
+                  </div>
                 </div>
               )}
 

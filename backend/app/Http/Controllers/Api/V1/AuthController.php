@@ -13,14 +13,23 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $credentials = $request->validate([
-            'email' => ['required', 'email'],
+            // "username" is the team account name; "email" kept for backward compatibility
+            'username' => ['required_without:email', 'nullable', 'string', 'max:255'],
+            'email' => ['required_without:username', 'nullable', 'string', 'max:255'],
             'password' => ['required', 'string'],
         ]);
 
-        $user = User::where('email', $credentials['email'])->first();
+        $identifier = trim((string) ($credentials['username'] ?? $credentials['email'] ?? ''));
+        $normalized = mb_strtolower($identifier);
+
+        $user = User::query()
+            ->whereRaw('LOWER(name) = ?', [$normalized])
+            ->orWhereRaw('LOWER(email) = ?', [$normalized])
+            ->first();
+
         if (!$user || !Hash::check($credentials['password'], $user->password)) {
             throw ValidationException::withMessages([
-                'email' => ['Email atau kata sandi tidak sesuai.'],
+                'username' => ['Username atau kata sandi tidak sesuai.'],
             ]);
         }
 

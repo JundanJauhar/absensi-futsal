@@ -48,6 +48,9 @@ const sidebarNav = [
   { href: "/settings", label: "Pengaturan", icon: Settings },
 ];
 
+import { getToken } from "@/lib/api";
+import { syncLocalFacesToServer } from "@/lib/faceStore";
+
 function isFullscreenRoute(pathname: string) {
   return pathname.startsWith("/kiosk") || pathname.includes("/face-registration");
 }
@@ -57,13 +60,42 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const { theme, setTheme } = useTheme();
   const [moreOpen, setMoreOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+    const token = getToken();
+    const authed = !!token;
+    setIsAuthenticated(authed);
+
+    if (!authed && pathname !== "/login") {
+      const next = encodeURIComponent(window.location.pathname + window.location.search);
+      window.location.replace(`/login?next=${next}`);
+      return;
+    }
+
+    if (authed) {
+      // In the background, upload any enrollments created on this laptop before server sync existed
+      syncLocalFacesToServer().catch(() => {});
+    }
+  }, [pathname]);
+
+  // Login page always renders freely
+  if (pathname === "/login") {
+    return <>{children}</>;
+  }
+
+  // Not authenticated or still checking: block the screen completely
+  if (isAuthenticated !== true) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-dark-950 text-white">
+        <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   // Fullscreen modes = no shell
-  if (isFullscreenRoute(pathname) || pathname === "/login") {
+  if (isFullscreenRoute(pathname)) {
     return <>{children}</>;
   }
 

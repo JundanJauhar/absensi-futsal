@@ -20,11 +20,25 @@ class Player extends Model
         'joined_at',
         'status',
         'notes',
+        'face_descriptors',
+        'face_photo',
+        'face_registered_at',
     ];
+
+    protected $hidden = ['face_descriptors', 'face_photo'];
 
     protected function casts(): array
     {
-        return ['joined_at' => 'date'];
+        return [
+            'joined_at' => 'date',
+            'face_descriptors' => 'array',
+            'face_registered_at' => 'datetime',
+        ];
+    }
+
+    public function hasFaceRegistered(): bool
+    {
+        return !empty($this->face_descriptors);
     }
 
     public function attendances(): HasMany { return $this->hasMany(Attendance::class); }

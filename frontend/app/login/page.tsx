@@ -1,16 +1,28 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Zap, Mail, Lock, AlertCircle, ArrowRight } from 'lucide-react';
-import Link from 'next/link';
-import { login } from '@/lib/api';
+import { Zap, User, Lock, AlertCircle, ArrowRight, Eye, EyeOff } from 'lucide-react';
+import { login, getToken } from '@/lib/api';
+
+function getNextPath(): string {
+  if (typeof window === 'undefined') return '/';
+  const next = new URLSearchParams(window.location.search).get('next');
+  // Only allow internal paths
+  return next && next.startsWith('/') && !next.startsWith('//') && !next.startsWith('/login') ? next : '/';
+}
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  // Already logged in → go straight to the app
+  useEffect(() => {
+    if (getToken()) window.location.replace(getNextPath());
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -18,10 +30,14 @@ export default function LoginPage() {
     setError('');
 
     try {
-      await login(email, password);
-      window.location.href = '/';
-    } catch {
-      setError('Email atau password salah');
+      await login(username.trim(), password);
+      window.location.replace(getNextPath());
+    } catch (err) {
+      setError(
+        err instanceof Error && err.message === 'LOGIN_THROTTLED'
+          ? 'Terlalu banyak percobaan. Tunggu 1 menit lalu coba lagi.'
+          : 'Username atau password salah'
+      );
       setIsLoading(false);
     }
   };
@@ -67,20 +83,22 @@ export default function LoginPage() {
             )}
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5" htmlFor="email">
-                Email
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5" htmlFor="username">
+                Username
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-gray-400" />
+                  <User className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  id="username"
+                  type="text"
+                  autoComplete="username"
+                  autoCapitalize="none"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
                   className="block w-full pl-10 pr-3 py-3 border border-gray-200 dark:border-gray-800 rounded-xl bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all outline-none"
-                  placeholder="coach@ftms.test"
+                  placeholder="Masukkan username"
                   required
                 />
               </div>
@@ -96,33 +114,22 @@ export default function LoginPage() {
                 </div>
                 <input
                   id="password"
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
+                  autoComplete="current-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-3 border border-gray-200 dark:border-gray-800 rounded-xl bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all outline-none"
+                  className="block w-full pl-10 pr-10 py-3 border border-gray-200 dark:border-gray-800 rounded-xl bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all outline-none"
                   placeholder="••••••••"
                   required
                 />
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <input
-                  id="remember-me"
-                  name="remember-me"
-                  type="checkbox"
-                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded bg-transparent"
-                />
-                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-600 dark:text-gray-400">
-                  Ingat saya
-                </label>
-              </div>
-
-              <div className="text-sm">
-                <a href="#" className="font-medium text-primary-600 hover:text-primary-500 dark:text-primary-400 dark:hover:text-primary-300 transition-colors">
-                  Lupa password?
-                </a>
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                  aria-label={showPassword ? 'Sembunyikan password' : 'Tampilkan password'}
+                >
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                </button>
               </div>
             </div>
 
@@ -146,8 +153,8 @@ export default function LoginPage() {
           </form>
 
           <div className="mt-8 text-center relative z-10">
-            <p className="text-xs text-gray-500 dark:text-gray-500 bg-gray-100 dark:bg-gray-800/50 inline-block px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-800">
-              Demo: <strong className="text-gray-700 dark:text-gray-300">coach@ftms.test</strong> / <strong className="text-gray-700 dark:text-gray-300">password</strong>
+            <p className="text-xs text-gray-400 dark:text-gray-500">
+              Khusus pengurus &amp; staf tim futsal
             </p>
           </div>
         </div>

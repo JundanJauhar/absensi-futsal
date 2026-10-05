@@ -18,10 +18,11 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $coach = User::firstOrCreate(['email' => 'coach@ftms.test'], [
-            'name' => 'Coach FTMS',
-            'email' => 'coach@ftms.test',
-            'password' => 'password',
+        $adminEmail = env('ADMIN_EMAIL', 'admin@ukmfutsalmaspa.local');
+        $coach = User::firstOrCreate(['email' => $adminEmail], [
+            'name' => env('ADMIN_USERNAME', 'UKM FUTSAL MASPA'),
+            'email' => $adminEmail,
+            'password' => env('ADMIN_PASSWORD', 'maspapunya'),
         ]);
 
         $players = [

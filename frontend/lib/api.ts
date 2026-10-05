@@ -30,24 +30,55 @@ export function clearToken() {
   window.localStorage.removeItem(tokenKey);
 }
 
+function redirectToLogin() {
+  if (typeof window === "undefined") return;
+  if (window.location.pathname !== "/login") {
+    const next = encodeURIComponent(window.location.pathname + window.location.search);
+    window.location.replace(`/login?next=${next}`);
+  }
+}
+
 async function request(path: string, options: RequestInit = {}) {
   const headers = new Headers(options.headers);
   headers.set("Accept", "application/json");
   const token = getToken();
   if (token) headers.set("Authorization", `Bearer ${token}`);
-  return fetch(`${getApiUrl()}${path}`, { ...options, headers });
+  const response = await fetch(`${getApiUrl()}${path}`, { ...options, headers });
+  // Expired / revoked session: force re-login (except for the login call itself)
+  if (response.status === 401 && path !== "/auth/login") {
+    clearToken();
+    redirectToLogin();
+  }
+  return response;
 }
 
-export async function login(email: string, password: string) {
-  const response = await request("/auth/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, password }) });
+export async function login(username: string, password: string) {
+  const response = await request("/auth/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username, password }) });
+  if (response.status === 429) throw new Error("LOGIN_THROTTLED");
   if (!response.ok) throw new Error("LOGIN_FAILED");
   const payload = await response.json();
   saveToken(payload.data.token);
 }
 
+/** Returns true when the stored token is still valid on the server. */
+export async function verifySession(): Promise<boolean> {
+  if (!getToken()) return false;
+  try {
+    const response = await request("/auth/me", { cache: "no-store" });
+    return response.ok;
+  } catch {
+    // Network error: keep the user in (offline-tolerant); API calls will re-check
+    return true;
+  }
+}
+
 export async function logout() {
-  await request("/auth/logout", { method: "POST" });
-  clearToken();
+  try {
+    await request("/auth/logout", { method: "POST" });
+  } finally {
+    clearToken();
+    window.location.replace("/login");
+  }
 }
 
 export async function getPlayers(params: { search?: string; status?: string; position?: string } = {}): Promise<PaginatedPlayers> {
@@ -186,10 +217,39 @@ export async function createKioskAttendance(input: {
   return await response.json();
 }
 
-export async function registerPlayerFace(id: number, input: FormData) {
-  const response = await request(`/players/${id}/face/register`, { method: "POST", body: input });
+export interface ServerFaceEntry {
+  player_id: number;
+  name: string;
+  jersey: string;
+  descriptors: number[][];
+  registered_at: string | null;
+}
+
+export async function registerPlayerFace(id: number | string, input: { descriptors: number[][]; photo?: string | null }) {
+  const response = await request(`/players/${id}/face/register`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
   if (!response.ok) throw new Error("FACE_REGISTER_FAILED");
+  return (await response.json()).data as { player_id: number; samples: number; photo: string | null; registered_at: string };
+}
+
+export async function getPlayerFace(id: number | string) {
+  const response = await request(`/players/${id}/face`, { cache: "no-store" });
+  if (!response.ok) throw new Error("FACE_UNAVAILABLE");
+  return (await response.json()).data as { player_id: number; registered: boolean; samples: number; photo: string | null; registered_at: string | null };
+}
+
+export async function getFaceDescriptors(): Promise<ServerFaceEntry[]> {
+  const response = await request("/face/descriptors", { cache: "no-store" });
+  if (!response.ok) throw new Error("FACE_DESCRIPTORS_UNAVAILABLE");
   return (await response.json()).data;
+}
+
+export async function deletePlayerFace(id: number | string) {
+  const response = await request(`/players/${id}/face`, { method: "DELETE" });
+  if (!response.ok) throw new Error("FACE_DELETE_FAILED");
 }
 
 export async function createEvaluation(input: { player_id: number; scores: Record<string, number>; notes?: string }) {

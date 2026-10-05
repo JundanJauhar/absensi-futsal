@@ -28,6 +28,7 @@ import {
   updatePlayer,
   deletePlayer,
 } from "@/lib/api";
+import { getFaceStatus, syncLocalFacesToServer } from "@/lib/faceStore";
 import type { Player } from "@/types/player";
 import type { PlayerData } from "@/lib/dataStore";
 import {
@@ -105,24 +106,44 @@ export default function PlayerDetailPage() {
   const [editNotes, setEditNotes] = useState("");
   const [editError, setEditError] = useState("");
 
-  // Load player by ID
+  // Load player by ID and ensure face status is up-to-date
   useEffect(() => {
-    if (playerId) {
-      getPlayer(Number(playerId))
-        .then((response) => {
-          const found = toPlayerData(response);
-          setPlayer(found);
-          setEditName(found.name);
-          setEditJersey(found.jersey);
-          setEditPosition(found.position);
-          setEditSecondary(found.secondaryPosition || "-");
-          setEditStatus(found.status);
-          setEditPhoto(found.avatarUrl || "");
-          setEditNotes(found.notes || "");
-        })
-        .catch(() => setPlayer(null))
-        .finally(() => setIsLoading(false));
+    if (!playerId) return;
+
+    let isMounted = true;
+
+    async function load() {
+      try {
+        const response = await getPlayer(Number(playerId));
+        const found = toPlayerData(response);
+
+        // Check if there is an enrollment in the face store (server or local cache)
+        const face = await getFaceStatus(playerId);
+        if (face.registered) {
+          found.faceRegistered = true;
+          if (face.photo && !found.avatarUrl) {
+            found.avatarUrl = face.photo;
+          }
+        }
+
+        if (!isMounted) return;
+        setPlayer(found);
+        setEditName(found.name);
+        setEditJersey(found.jersey);
+        setEditPosition(found.position);
+        setEditSecondary(found.secondaryPosition || "-");
+        setEditStatus(found.status);
+        setEditPhoto(found.avatarUrl || "");
+        setEditNotes(found.notes || "");
+      } catch {
+        if (isMounted) setPlayer(null);
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
     }
+
+    load();
+    return () => { isMounted = false; };
   }, [playerId]);
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {

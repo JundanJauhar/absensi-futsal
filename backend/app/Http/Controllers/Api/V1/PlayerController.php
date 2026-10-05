@@ -56,6 +56,8 @@ class PlayerController extends Controller
                 Storage::disk('public')->delete($player->profile_photo);
             }
             $data['profile_photo'] = $request->file('profile_photo')->store('players', 'public');
+            // Manual upload overrides the biometric avatar
+            $data['face_photo'] = null;
         }
         $player->update($data);
         $this->audit('player.updated', $player, $oldValues, $player->fresh()->only($player->getFillable()));
@@ -75,13 +77,17 @@ class PlayerController extends Controller
 
     private function audit(string $action, Player $player, ?array $oldValues, ?array $newValues): void
     {
+        $strip = fn (?array $values) => $values === null
+            ? null
+            : array_diff_key($values, array_flip(['face_descriptors', 'face_photo']));
+
         AuditLog::create([
             'user_id' => request()->user()?->id,
             'action' => $action,
             'entity_type' => Player::class,
             'entity_id' => $player->id,
-            'old_values' => $oldValues,
-            'new_values' => $newValues,
+            'old_values' => $strip($oldValues),
+            'new_values' => $strip($newValues),
         ]);
     }
 }

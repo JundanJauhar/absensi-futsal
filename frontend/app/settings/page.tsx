@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { downloadBackupFile, importAllData, FtmsBackup } from '@/lib/dataStore';
+import { logout } from '@/lib/api';
 
 export default function SettingsPage() {
   const { theme, setTheme } = useTheme();
@@ -272,7 +273,10 @@ export default function SettingsPage() {
               <span className="text-gray-700 dark:text-gray-300">Kebijakan Privasi</span>
               <ChevronRight className="w-5 h-5 text-gray-400" />
             </button>
-            <button className="w-full p-4 md:p-5 flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors text-left text-danger-600 dark:text-danger-500 font-medium">
+            <button
+              onClick={() => logout()}
+              className="w-full p-4 md:p-5 flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors text-left text-danger-600 dark:text-danger-500 font-medium"
+            >
               <span>Keluar (Logout)</span>
             </button>
           </div>
