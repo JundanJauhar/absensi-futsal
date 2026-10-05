@@ -151,7 +151,7 @@ export default function PlayersPage() {
       setIsAddModalOpen(false);
     } catch (error) {
       console.error("Failed to create player:", error);
-      setFormError("Pemain tidak dapat disimpan ke server.");
+      setFormError(error instanceof Error ? error.message : "Pemain tidak dapat disimpan ke server.");
       return;
     }
 

@@ -73,8 +73,13 @@ export async function createPlayer(input: FormData | Record<string, string | num
     headers: isFormData ? undefined : { "Content-Type": "application/json" },
     body: isFormData ? input : JSON.stringify(input),
   });
-  if (!response.ok) throw new Error("PLAYER_CREATE_FAILED");
   const payload = await response.json();
+  if (!response.ok) {
+    const validationMessage = payload.errors
+      ? Object.values(payload.errors as Record<string, string[]>).flat().join(" ")
+      : payload.message;
+    throw new Error(validationMessage || "Pemain tidak dapat disimpan ke server.");
+  }
   return payload.data;
 }
 
