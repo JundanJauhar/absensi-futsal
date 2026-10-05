@@ -24,18 +24,18 @@ npm install
 npm run dev
 ```
 
-Buka `http://localhost:3000`. Style guide tersedia di `http://localhost:3000/style-guide`.
+Buka `http://localhost:3001`. Style guide tersedia di `http://localhost:3001/style-guide`.
 
 ## Menjalankan Laravel API secara lokal
 
 ```powershell
 cd backend
-php artisan migrate:fresh --seed
-php artisan serve --port=8000
+php artisan migrate --force
+php artisan serve --host=0.0.0.0 --port=8000
 ```
 
 Health check: `http://localhost:8000/api/v1/health`. API pemain: `http://localhost:8000/api/v1/players`.
-Login: `http://localhost:3000/login`. Akun demo: `coach@ftms.test` / `password`.
+Login: `http://localhost:3001/login`. Akun demo: `coach@ftms.test` / `password`.
 
 ## Menjalankan service pendukung
 
@@ -48,6 +48,14 @@ Endpoint health face service: `http://localhost:8001/health`.
 ## Environment
 
 Salin `.env.example` menjadi `.env.local` di folder `frontend`. Secret backend tidak boleh diletakkan di frontend.
+
+Untuk deployment:
+
+- Set Railway Root Directory ke `backend` agar Railway menggunakan `backend/Dockerfile`.
+- Set Vercel Root Directory ke `frontend`.
+- Set `NEXT_PUBLIC_API_URL` di Vercel ke URL Railway backend + `/api/v1`.
+- Set `FRONTEND_URL` di Railway ke URL Vercel.
+- Jangan menjalankan `migrate:fresh` pada database Supabase yang sudah berisi data.
 
 ## Checklist implementasi operasional
 
@@ -73,7 +81,7 @@ Salin `.env.example` menjadi `.env.local` di folder `frontend`. Secret backend t
 - [ ] Opsional: pasang model face recognition sungguhan pada service Python.
 - [ ] Opsional: hubungkan Telegram Bot API dan Grafana ke deployment produksi.
 
-Untuk pengembangan lokal, backend memakai SQLite bawaan Laravel agar mudah dijalankan. Test PHPUnit memakai SQLite in-memory sehingga tidak menghapus database development. Docker Compose menyiapkan PostgreSQL, Redis, dan service backend untuk lingkungan terkontainerisasi. Pada environment ini Docker dan Python CLI tidak tersedia, jadi validasi Docker/Face Service penuh perlu dijalankan pada mesin yang memiliki Docker atau Python.
+Untuk pengembangan lokal, backend menggunakan PostgreSQL Supabase melalui konfigurasi `.env`. Test PHPUnit memakai SQLite in-memory sehingga tidak menghapus database development. Docker Compose menyiapkan PostgreSQL, Redis, dan service backend untuk lingkungan terkontainerisasi. Pada environment ini Docker dan Python CLI tidak tersedia, jadi validasi Docker/Face Service penuh perlu dijalankan pada mesin yang memiliki Docker atau Python.
 
 ## Endpoint utama
 
