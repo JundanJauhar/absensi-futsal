@@ -1,0 +1,34 @@
+{
+  "name": "ftms-frontend",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "next dev -H 0.0.0.0 -p 3001",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@tailwindcss/postcss": "^4.3.3",
+    "@vladmandic/face-api": "^1.7.15",
+    "clsx": "^2.1.1",
+    "framer-motion": "^13.4.6",
+    "idb-keyval": "^6.3.0",
+    "lucide-react": "^1.49.0",
+    "next": "^16.3.8",
+    "next-themes": "^0.4.6",
+    "postcss": "^8.5.28",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "recharts": "^3.10.1",
+    "tailwindcss": "^4.3.3"
+  },
+  "devDependencies": {
+    "@types/node": "20.16.5",
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.2",
+    "typescript": "5.6.2"
+  }
+}
