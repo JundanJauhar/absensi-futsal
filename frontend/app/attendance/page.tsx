@@ -92,6 +92,7 @@ export default function AttendanceHistoryPage() {
       jersey: String(player.jersey_number),
       position: ({ goalkeeper: 'Kiper', anchor: 'Anchor', flank: 'Flank', pivot: 'Pivot' } as const)[player.primary_position],
       secondaryPosition: player.secondary_position ? ({ goalkeeper: 'Kiper', anchor: 'Anchor', flank: 'Flank', pivot: 'Pivot' } as const)[player.secondary_position] : undefined,
+      primaryKick: ({ right: 'Kanan', left: 'Kiri', both: 'Kedua Kaki' } as const)[player.primary_kick as 'right' | 'left' | 'both'] || 'Kanan',
       status: player.status === 'active' ? 'Aktif' : 'Nonaktif',
       faceRegistered: player.face_registered,
       avatarUrl: player.profile_photo || '',

@@ -5,6 +5,7 @@ export interface PlayerData {
   jersey: string;
   position: 'Kiper' | 'Anchor' | 'Flank' | 'Pivot';
   secondaryPosition?: string;
+  primaryKick?: 'Kanan' | 'Kiri' | 'Kedua Kaki' | string;
   status: 'Aktif' | 'Nonaktif';
   faceRegistered: boolean;
   avatarUrl: string;

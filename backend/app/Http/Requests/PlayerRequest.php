@@ -29,6 +29,7 @@ class PlayerRequest extends FormRequest
             'profile_photo' => ['nullable', 'image', 'max:5120'],
             'primary_position' => ['required', Rule::in(['goalkeeper', 'anchor', 'flank', 'pivot'])],
             'secondary_position' => ['nullable', Rule::in(['goalkeeper', 'anchor', 'flank', 'pivot'])],
+            'primary_kick' => ['nullable', 'string', Rule::in(['right', 'left', 'both'])],
             'joined_at' => ['required', 'date'],
             'status' => ['required', Rule::in(['active', 'inactive'])],
             'notes' => ['nullable', 'string', 'max:2000'],

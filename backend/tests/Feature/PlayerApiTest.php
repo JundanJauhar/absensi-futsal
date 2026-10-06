@@ -60,4 +60,36 @@ class PlayerApiTest extends TestCase
             ->assertOk()
             ->assertJsonPath('success', true);
     }
+
+    public function test_coach_can_set_and_update_primary_kick(): void
+    {
+        $user = User::factory()->create();
+
+        $create = $this->actingAs($user, 'sanctum')
+            ->postJson('/api/v1/players', [
+                'full_name' => 'Striker Kiri',
+                'jersey_number' => 77,
+                'primary_position' => 'flank',
+                'primary_kick' => 'left',
+                'joined_at' => '2026-10-06',
+                'status' => 'active',
+            ]);
+
+        $create->assertCreated()
+            ->assertJsonPath('data.primary_kick', 'left');
+
+        $playerId = $create->json('data.id');
+
+        $this->actingAs($user, 'sanctum')
+            ->putJson("/api/v1/players/{$playerId}", [
+                'full_name' => 'Striker Kiri',
+                'jersey_number' => 77,
+                'primary_position' => 'flank',
+                'primary_kick' => 'both',
+                'joined_at' => '2026-10-06',
+                'status' => 'active',
+            ])
+            ->assertOk()
+            ->assertJsonPath('data.primary_kick', 'both');
+    }
 }

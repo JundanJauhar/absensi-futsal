@@ -72,12 +72,21 @@ function toPlayerData(player: Player): PlayerData {
     flank: "Flank",
     pivot: "Pivot",
   };
+  const kickLabels: Record<string, string> = {
+    right: "Kanan",
+    left: "Kiri",
+    both: "Kedua Kaki",
+    Kanan: "Kanan",
+    Kiri: "Kiri",
+    "Kedua Kaki": "Kedua Kaki",
+  };
   return {
     id: String(player.id),
     name: player.full_name,
     jersey: String(player.jersey_number),
     position: positions[player.primary_position],
     secondaryPosition: player.secondary_position ? positions[player.secondary_position] : undefined,
+    primaryKick: kickLabels[player.primary_kick || "right"] || "Kanan",
     status: player.status === "active" ? "Aktif" : "Nonaktif",
     faceRegistered: player.face_registered,
     avatarUrl: player.profile_photo ?? "",
@@ -100,7 +109,7 @@ export default function PlayerDetailPage() {
   const [editName, setEditName] = useState("");
   const [editJersey, setEditJersey] = useState("");
   const [editPosition, setEditPosition] = useState<PlayerData['position']>("Flank");
-  const [editSecondary, setEditSecondary] = useState("");
+  const [editKick, setEditKick] = useState<string>("Kanan");
   const [editStatus, setEditStatus] = useState<PlayerData['status']>("Aktif");
   const [editPhoto, setEditPhoto] = useState("");
   const [editNotes, setEditNotes] = useState("");
@@ -131,7 +140,7 @@ export default function PlayerDetailPage() {
         setEditName(found.name);
         setEditJersey(found.jersey);
         setEditPosition(found.position);
-        setEditSecondary(found.secondaryPosition || "-");
+        setEditKick(found.primaryKick || "Kanan");
         setEditStatus(found.status);
         setEditPhoto(found.avatarUrl || "");
         setEditNotes(found.notes || "");
@@ -176,17 +185,26 @@ export default function PlayerDetailPage() {
       Flank: "flank",
       Pivot: "pivot",
     };
+    const kickMap: Record<string, string> = {
+      Kanan: "right",
+      Kiri: "left",
+      "Kedua Kaki": "both",
+    };
     try {
       const updatedResponse = await updatePlayer(Number(player.id), {
         full_name: editName.trim(),
         jersey_number: Number(editJersey),
         primary_position: positions[editPosition],
-        secondary_position: editSecondary === "-" ? "" : positions[editSecondary as PlayerData["position"]],
+        primary_kick: kickMap[editKick] || "right",
         joined_at: player.joinDate,
         status: editStatus === "Aktif" ? "active" : "inactive",
         notes: editNotes.trim(),
       });
-      setPlayer(toPlayerData(updatedResponse));
+      const updatedData = toPlayerData(updatedResponse);
+      if (player.avatarUrl && !updatedData.avatarUrl) {
+        updatedData.avatarUrl = player.avatarUrl;
+      }
+      setPlayer(updatedData);
       setIsEditOpen(false);
       setEditError("");
     } catch (error) {
@@ -289,11 +307,9 @@ export default function PlayerDetailPage() {
 
           <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mb-4">
             <PositionBadge position={player.position} />
-            {player.secondaryPosition && player.secondaryPosition !== "-" && (
-              <span className="text-xs px-2.5 py-0.5 rounded-full bg-dark-100 dark:bg-dark-800 text-dark-600 dark:text-dark-400 font-semibold">
-                Sekunder: {player.secondaryPosition}
-              </span>
-            )}
+            <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60 font-semibold">
+              Kaki Terkuat: {player.primaryKick || "Kanan"}
+            </span>
             <span className="text-xs text-dark-400 dark:text-dark-500">
               Bergabung {player.joinDate}
             </span>
@@ -360,10 +376,14 @@ export default function PlayerDetailPage() {
                   Informasi Detail
                 </h3>
 
-                <div className="grid grid-cols-2 gap-4 text-sm">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
                   <div className="p-3 rounded-xl bg-dark-50 dark:bg-dark-950 border border-dark-100 dark:border-dark-800">
                     <span className="text-xs text-dark-400 block mb-1">Posisi Utama</span>
                     <span className="font-bold text-dark-900 dark:text-white">{player.position}</span>
+                  </div>
+                  <div className="p-3 rounded-xl bg-dark-50 dark:bg-dark-950 border border-dark-100 dark:border-dark-800">
+                    <span className="text-xs text-dark-400 block mb-1">Kaki Terkuat (Kick)</span>
+                    <span className="font-bold text-dark-900 dark:text-white">{player.primaryKick || "Kanan"}</span>
                   </div>
                   <div className="p-3 rounded-xl bg-dark-50 dark:bg-dark-950 border border-dark-100 dark:border-dark-800">
                     <span className="text-xs text-dark-400 block mb-1">Nomor Punggung</span>
@@ -721,18 +741,16 @@ export default function PlayerDetailPage() {
 
                   <div>
                     <label className="block text-xs font-bold uppercase tracking-wider text-dark-700 dark:text-dark-300 mb-1">
-                      Posisi Sekunder
+                      Kaki Terkuat (Primary Kick)
                     </label>
                     <select
-                      value={editSecondary}
-                      onChange={(e) => setEditSecondary(e.target.value)}
+                      value={editKick}
+                      onChange={(e) => setEditKick(e.target.value)}
                       className="w-full px-4 py-3 rounded-xl bg-dark-50 dark:bg-dark-950 border border-dark-200 dark:border-dark-800 text-dark-900 dark:text-white text-sm focus:outline-none focus:border-primary-500"
                     >
-                      <option value="Kiper">Kiper</option>
-                      <option value="Anchor">Anchor</option>
-                      <option value="Flank">Flank</option>
-                      <option value="Pivot">Pivot</option>
-                      <option value="-">-</option>
+                      <option value="Kanan">Kanan</option>
+                      <option value="Kiri">Kiri</option>
+                      <option value="Kedua Kaki">Kedua Kaki</option>
                     </select>
                   </div>
                 </div>

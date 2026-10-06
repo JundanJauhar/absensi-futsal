@@ -30,12 +30,21 @@ function toPlayerData(player: Player): PlayerData {
     flank: "Flank",
     pivot: "Pivot",
   };
+  const kickLabels: Record<string, string> = {
+    right: "Kanan",
+    left: "Kiri",
+    both: "Kedua Kaki",
+    Kanan: "Kanan",
+    Kiri: "Kiri",
+    "Kedua Kaki": "Kedua Kaki",
+  };
   return {
     id: String(player.id),
     name: player.full_name,
     jersey: String(player.jersey_number),
     position: positions[player.primary_position],
     secondaryPosition: player.secondary_position ? positions[player.secondary_position] : undefined,
+    primaryKick: kickLabels[player.primary_kick || "right"] || "Kanan",
     status: player.status === "active" ? "Aktif" : "Nonaktif",
     faceRegistered: player.face_registered,
     avatarUrl: player.profile_photo ?? "",
@@ -71,7 +80,7 @@ export default function PlayersPage() {
   const [formName, setFormName] = useState("");
   const [formJersey, setFormJersey] = useState("");
   const [formPosition, setFormPosition] = useState<PlayerData['position']>("Flank");
-  const [formSecondary, setFormSecondary] = useState<string>("Pivot");
+  const [formKick, setFormKick] = useState<string>("Kanan");
   const [formPhoto, setFormPhoto] = useState<string>("");
   const [formNotes, setFormNotes] = useState("");
   const [formError, setFormError] = useState("");
@@ -138,11 +147,16 @@ export default function PlayersPage() {
         Flank: "flank",
         Pivot: "pivot",
       };
+      const kickMap: Record<string, string> = {
+        Kanan: "right",
+        Kiri: "left",
+        "Kedua Kaki": "both",
+      };
       const createdResponse = await createPlayer({
         full_name: formName.trim(),
         jersey_number: Number(formJersey),
         primary_position: positions[formPosition],
-        secondary_position: positions[formSecondary as PlayerData["position"]],
+        primary_kick: kickMap[formKick] || "right",
         joined_at: new Date().toISOString().split("T")[0],
         status: "active",
         notes: formNotes.trim(),
@@ -159,7 +173,7 @@ export default function PlayersPage() {
     setFormName("");
     setFormJersey("");
     setFormPosition("Flank");
-    setFormSecondary("Pivot");
+    setFormKick("Kanan");
     setFormPhoto("");
     setFormNotes("");
     setFormError("");
@@ -291,10 +305,15 @@ export default function PlayersPage() {
                         {player.name}
                       </h3>
                       
-                      <div className="flex flex-col items-center gap-2 mt-2">
-                        <PositionBadge position={player.position} />
+                      <div className="flex flex-col items-center gap-1.5 mt-2">
+                        <div className="flex items-center gap-1.5 flex-wrap justify-center">
+                          <PositionBadge position={player.position} />
+                          <span className="text-[11px] px-2 py-0.5 rounded-full bg-dark-100 dark:bg-dark-800 text-dark-600 dark:text-dark-300 font-semibold border border-dark-200/50 dark:border-dark-700/50">
+                            Kaki {player.primaryKick || "Kanan"}
+                          </span>
+                        </div>
                         
-                        <div className="flex items-center gap-1.5 mt-2 px-2.5 py-1 rounded-full bg-dark-50 dark:bg-dark-800/80 border border-dark-100 dark:border-dark-700/50">
+                        <div className="flex items-center gap-1.5 mt-1 px-2.5 py-1 rounded-full bg-dark-50 dark:bg-dark-800/80 border border-dark-100 dark:border-dark-700/50">
                           <ScanFace className={`w-3.5 h-3.5 ${player.faceRegistered ? 'text-emerald-500' : 'text-dark-400'}`} />
                           <span className={`text-xs font-medium ${player.faceRegistered ? 'text-emerald-600 dark:text-emerald-400' : 'text-dark-500 dark:text-dark-400'}`}>
                             {player.faceRegistered ? "Wajah Terdaftar" : "Belum Ada Wajah"}
@@ -432,18 +451,16 @@ export default function PlayersPage() {
 
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-dark-700 dark:text-dark-300 mb-1">
-                    Posisi Sekunder
+                    Kaki Terkuat (Primary Kick)
                   </label>
                   <select
-                    value={formSecondary}
-                    onChange={(e) => setFormSecondary(e.target.value)}
+                    value={formKick}
+                    onChange={(e) => setFormKick(e.target.value)}
                     className="w-full px-4 py-3 rounded-xl bg-dark-50 dark:bg-dark-950 border border-dark-200 dark:border-dark-800 text-dark-900 dark:text-white text-sm focus:outline-none focus:border-primary-500 transition-colors"
                   >
-                    <option value="Kiper">Kiper</option>
-                    <option value="Anchor">Anchor</option>
-                    <option value="Flank">Flank</option>
-                    <option value="Pivot">Pivot</option>
-                    <option value="-">-</option>
+                    <option value="Kanan">Kanan</option>
+                    <option value="Kiri">Kiri</option>
+                    <option value="Kedua Kaki">Kedua Kaki</option>
                   </select>
                 </div>
 

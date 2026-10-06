@@ -16,6 +16,7 @@ class PlayerResource extends JsonResource
             'profile_photo' => $this->resolveProfilePhoto(),
             'primary_position' => $this->primary_position,
             'secondary_position' => $this->secondary_position,
+            'primary_kick' => $this->primary_kick ?? 'right',
             'joined_at' => $this->joined_at?->toDateString(),
             'status' => $this->status,
             'notes' => $this->notes,

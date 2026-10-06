@@ -17,6 +17,7 @@ class Player extends Model
         'profile_photo',
         'primary_position',
         'secondary_position',
+        'primary_kick',
         'joined_at',
         'status',
         'notes',

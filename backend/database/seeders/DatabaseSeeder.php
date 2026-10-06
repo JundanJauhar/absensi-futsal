@@ -48,6 +48,7 @@ class DatabaseSeeder extends Seeder
 
         foreach ($players as $player) {
             Player::updateOrCreate(['jersey_number' => $player['jersey_number']], $player + [
+                'primary_kick' => 'right',
                 'joined_at' => now()->subMonths(rand(2, 18))->toDateString(),
                 'status' => 'active',
             ]);

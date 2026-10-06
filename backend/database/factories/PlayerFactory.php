@@ -15,6 +15,7 @@ class PlayerFactory extends Factory
             'full_name' => fake()->name(),
             'jersey_number' => fake()->unique()->numberBetween(0, 99),
             'primary_position' => fake()->randomElement(['goalkeeper', 'anchor', 'flank', 'pivot']),
+            'primary_kick' => fake()->randomElement(['right', 'left', 'both']),
             'joined_at' => fake()->date(),
             'status' => 'active',
         ];

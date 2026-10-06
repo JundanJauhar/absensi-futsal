@@ -1,5 +1,6 @@
 export type PlayerPosition = "goalkeeper" | "anchor" | "flank" | "pivot";
 export type PlayerStatus = "active" | "inactive";
+export type PrimaryKick = "right" | "left" | "both";
 
 export type Player = {
   id: number;
@@ -7,7 +8,8 @@ export type Player = {
   jersey_number: number;
   profile_photo: string | null;
   primary_position: PlayerPosition;
-  secondary_position: PlayerPosition | null;
+  secondary_position?: PlayerPosition | null;
+  primary_kick?: PrimaryKick | string | null;
   joined_at: string;
   status: PlayerStatus;
   notes: string | null;

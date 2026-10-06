@@ -31,12 +31,21 @@ function toPlayerData(player: Player): PlayerData {
     flank: "Flank",
     pivot: "Pivot",
   };
+  const kickLabels: Record<string, string> = {
+    right: "Kanan",
+    left: "Kiri",
+    both: "Kedua Kaki",
+    Kanan: "Kanan",
+    Kiri: "Kiri",
+    "Kedua Kaki": "Kedua Kaki",
+  };
   return {
     id: String(player.id),
     name: player.full_name,
     jersey: String(player.jersey_number),
     position: positions[player.primary_position],
     secondaryPosition: player.secondary_position ? positions[player.secondary_position] : undefined,
+    primaryKick: kickLabels[player.primary_kick || "right"] || "Kanan",
     status: player.status === "active" ? "Aktif" : "Nonaktif",
     faceRegistered: player.face_registered,
     avatarUrl: player.profile_photo ?? "",
