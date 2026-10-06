@@ -21,8 +21,17 @@ import {
 } from 'lucide-react';
 import clsx from 'clsx';
 import { StatusBadge } from '@/components/ui/States';
-import { getTrainingSessions, createTrainingSession, rescheduleTraining } from '@/lib/api';
-import type { TrainingSessionData } from '@/lib/dataStore';
+import { 
+  getTrainingSessions, 
+  createTrainingSession, 
+  rescheduleTraining 
+} from '@/lib/api';
+import { 
+  type TrainingSessionData, 
+  saveStoredSessions, 
+  getStoredSessions, 
+  createInitialMeetingNote 
+} from '@/lib/dataStore';
 
 const formatDayName = (dateStr: string) => {
   const d = new Date(dateStr);
@@ -51,6 +60,7 @@ export default function TrainingPage() {
   const [formEndTime, setFormEndTime] = useState("18:00");
   const [formLocation, setFormLocation] = useState("Pondok Pesantren Sunan Pandanaran");
   const [formType, setFormType] = useState<TrainingSessionData['type']>("Latihan Rutin");
+  const [formAutoNotes, setFormAutoNotes] = useState(true);
   const [createError, setCreateError] = useState("");
 
   // Reschedule State
@@ -108,7 +118,8 @@ export default function TrainingPage() {
         location: formLocation.trim(),
         status: "scheduled",
       });
-      setSessions(prev => [{
+
+      const newSessionData: TrainingSessionData = {
         id: String(created.id),
         title: formTitle.trim() || "Latihan Tim",
         date: created.training_date,
@@ -119,7 +130,18 @@ export default function TrainingPage() {
         status: created.status,
         attendanceCount: 0,
         totalPlayers: 0,
-      }, ...prev]);
+      };
+
+      // Save to local store so offline and notes access works immediately
+      const existingStored = getStoredSessions();
+      saveStoredSessions([newSessionData, ...existingStored.filter(s => String(s.id) !== String(created.id))]);
+
+      // Otomatis buat Buku Latihan (checklist aktivitas) jika opsi aktif
+      if (formAutoNotes) {
+        createInitialMeetingNote(String(created.id), newSessionData.title, newSessionData.date);
+      }
+
+      setSessions(prev => [newSessionData, ...prev]);
       setShowCreateSheet(false);
       setFormDate("");
       setCreateError("");
@@ -488,6 +510,25 @@ export default function TrainingPage() {
                     value={formLocation}
                     onChange={(e) => setFormLocation(e.target.value)}
                     className="w-full px-4 py-3 rounded-xl bg-dark-50 dark:bg-dark-950 border border-dark-200 dark:border-dark-800 text-dark-900 dark:text-white text-sm focus:outline-none focus:border-primary-500"
+                  />
+                </div>
+
+                <div className="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center shrink-0">
+                      <BookOpen className="w-4 h-4 text-emerald-500" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-dark-900 dark:text-white">Otomatis Buat Buku Latihan</p>
+                      <p className="text-[11px] text-dark-500 dark:text-dark-400">Menyediakan checklist aktivitas & catatan latihan</p>
+                    </div>
+                  </div>
+                  <input
+                    type="checkbox"
+                    id="autoNotesToggle"
+                    checked={formAutoNotes}
+                    onChange={(e) => setFormAutoNotes(e.target.checked)}
+                    className="w-5 h-5 rounded text-emerald-500 accent-emerald-500 cursor-pointer shrink-0"
                   />
                 </div>
 

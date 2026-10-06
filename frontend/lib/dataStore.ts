@@ -433,6 +433,39 @@ export function saveMeetingNote(note: MeetingNote) {
   saveStoredMeetingNotes(notes);
 }
 
+export const DEFAULT_FUTSAL_ACTIVITIES: Array<Omit<ActivityItem, 'id'>> = [
+  { text: 'Pemanasan dinamis & peregangan (15m)', done: false },
+  { text: 'Drill passing triangle & first touch (20m)', done: false },
+  { text: 'Simulasi transisi bertahan ke menyerang (25m)', done: false },
+  { text: 'Game mini 4 vs 4 intensitas tinggi (30m)', done: false },
+  { text: 'Pendinginan & evaluasi tim (10m)', done: false },
+];
+
+export function createInitialMeetingNote(
+  sessionId: string,
+  sessionTitle: string,
+  sessionDate: string,
+  customActivities?: ActivityItem[]
+): MeetingNote {
+  const activities: ActivityItem[] = customActivities && customActivities.length > 0
+    ? customActivities
+    : DEFAULT_FUTSAL_ACTIVITIES.map((a, i) => ({ id: `act_${Date.now()}_${i}`, ...a }));
+
+  const newNote: MeetingNote = {
+    id: `note_${Date.now()}_${sessionId}`,
+    sessionId: String(sessionId),
+    sessionTitle: sessionTitle || 'Latihan Tim',
+    sessionDate: sessionDate || new Date().toISOString().split('T')[0],
+    activities,
+    photos: [],
+    notes: '',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+  saveMeetingNote(newNote);
+  return newNote;
+}
+
 export function deleteMeetingNote(noteId: string) {
   const notes = getStoredMeetingNotes();
   saveStoredMeetingNotes(notes.filter(n => n.id !== noteId));
