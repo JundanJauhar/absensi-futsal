@@ -47,77 +47,9 @@ export interface AttendanceRecord {
   confidence?: number;
 }
 
-const DEFAULT_PLAYERS: PlayerData[] = [
-  { id: "1", name: "Budi Santoso", jersey: "10", position: "Flank", secondaryPosition: "Pivot", status: "Aktif", faceRegistered: true, avatarUrl: "", joinDate: "2023-01-15", notes: "Pemain dengan kecepatan tinggi, spesialis kaki kiri." },
-  { id: "2", name: "Andi Wijaya", jersey: "1", position: "Kiper", secondaryPosition: "Anchor", status: "Aktif", faceRegistered: true, avatarUrl: "", joinDate: "2023-02-10", notes: "Refleks cepat, tangguh duel satu lawan satu." },
-  { id: "3", name: "Reza Pratama", jersey: "5", position: "Anchor", secondaryPosition: "Flank", status: "Aktif", faceRegistered: false, avatarUrl: "", joinDate: "2023-03-01", notes: "Distribusi bola sangat baik, vokal dalam bertahan." },
-  { id: "4", name: "Deni Saputra", jersey: "9", position: "Pivot", secondaryPosition: "Flank", status: "Aktif", faceRegistered: true, avatarUrl: "", joinDate: "2023-03-15", notes: "Kuat menahan bola, akurasi shooting tajam." },
-  { id: "5", name: "Kevin Sanjaya", jersey: "11", position: "Flank", secondaryPosition: "Pivot", status: "Nonaktif", faceRegistered: true, avatarUrl: "", joinDate: "2023-04-01", notes: "Sedang pemulihan cedera pergelangan kaki." },
-  { id: "6", name: "Taufik Hidayat", jersey: "7", position: "Flank", secondaryPosition: "Anchor", status: "Aktif", faceRegistered: false, avatarUrl: "", joinDate: "2023-04-15", notes: "Stamina prima dan daya jelajah tinggi." },
-  { id: "7", name: "Marcus Fernaldi", jersey: "8", position: "Anchor", secondaryPosition: "Pivot", status: "Aktif", faceRegistered: true, avatarUrl: "", joinDate: "2023-05-01", notes: "Gaya main lugas dan disiplin transisi bertahan." },
-  { id: "8", name: "Hendra Setiawan", jersey: "4", position: "Anchor", secondaryPosition: "Anchor", status: "Aktif", faceRegistered: true, avatarUrl: "", joinDate: "2023-05-15", notes: "Ketenangan tinggi, membaca arah serangan lawan." },
-  { id: "9", name: "Mohammad Ahsan", jersey: "2", position: "Kiper", secondaryPosition: "Anchor", status: "Aktif", faceRegistered: false, avatarUrl: "", joinDate: "2023-06-01", notes: "Kiper kedua dengan jangkauan tangkapan lebar." },
-  { id: "10", name: "Jonathan Christie", jersey: "14", position: "Flank", secondaryPosition: "Pivot", status: "Aktif", faceRegistered: true, avatarUrl: "", joinDate: "2023-06-15", notes: "Agresif menusuk pertahanan dari sayap kanan." },
-  { id: "11", name: "Anthony Ginting", jersey: "15", position: "Flank", secondaryPosition: "Pivot", status: "Aktif", faceRegistered: true, avatarUrl: "", joinDate: "2023-07-01", notes: "Footwork lincah, pandai mencari celah tembak." },
-  { id: "12", name: "Tommy Sugiarto", jersey: "16", position: "Pivot", secondaryPosition: "Flank", status: "Nonaktif", faceRegistered: false, avatarUrl: "", joinDate: "2023-07-15", notes: "Absen sementara urusan dinas luar kota." },
-  { id: "13", name: "Ricky Subagja", jersey: "3", position: "Anchor", secondaryPosition: "Anchor", status: "Aktif", faceRegistered: true, avatarUrl: "", joinDate: "2023-08-01", notes: "Intersep bola akurat dan tekel bersih." },
-  { id: "14", name: "Rexy Mainaky", jersey: "6", position: "Anchor", secondaryPosition: "Flank", status: "Aktif", faceRegistered: true, avatarUrl: "", joinDate: "2023-08-15", notes: "Kepemimpinan di lapangan solid." },
-  { id: "15", name: "Simon Santoso", jersey: "12", position: "Flank", secondaryPosition: "Pivot", status: "Aktif", faceRegistered: true, avatarUrl: "", joinDate: "2023-09-01", notes: "Dribble tipuan sayap kiri efektif." },
-  { id: "16", name: "Sony Dwi Kuncoro", jersey: "17", position: "Flank", secondaryPosition: "Anchor", status: "Aktif", faceRegistered: false, avatarUrl: "", joinDate: "2023-09-15", notes: "Spesialis set piece tendangan bebas." },
-  { id: "17", name: "Fajar Alfian", jersey: "18", position: "Pivot", secondaryPosition: "Flank", status: "Aktif", faceRegistered: true, avatarUrl: "", joinDate: "2023-10-01", notes: "Target man dengan fisik kuat." },
-  { id: "18", name: "Rian Ardianto", jersey: "19", position: "Kiper", secondaryPosition: "Kiper", status: "Aktif", faceRegistered: true, avatarUrl: "", joinDate: "2023-10-15", notes: "Distribusi lemparan akurat untuk counter attack." }
-];
+const DEFAULT_PLAYERS: PlayerData[] = [];
 
-const DEFAULT_SESSIONS: TrainingSessionData[] = [
-  {
-    id: "s1",
-    title: "Latihan Rutin Jumat",
-    date: "2026-10-02",
-    time: "16:00",
-    endTime: "18:00",
-    location: "Pondok Pesantren Sunan Pandanaran",
-    type: "Latihan Rutin",
-    status: "scheduled",
-    attendanceCount: 0,
-    totalPlayers: 18,
-  },
-  {
-    id: "s2",
-    title: "Simulasi Taktik Menyerang",
-    date: "2026-10-09",
-    time: "16:00",
-    endTime: "18:00",
-    location: "Lapangan Futsal Utama",
-    type: "Latihan Taktik",
-    status: "scheduled",
-    attendanceCount: 0,
-    totalPlayers: 18,
-  },
-  {
-    id: "s3",
-    title: "Friendly Match vs Tim Alumni",
-    date: "2026-10-16",
-    time: "15:30",
-    endTime: "17:30",
-    location: "GOR Futsal Sleman",
-    type: "Pertandingan",
-    status: "scheduled",
-    attendanceCount: 0,
-    totalPlayers: 18,
-  },
-  {
-    id: "s4",
-    title: "Latihan Rutin Pekan Lalu",
-    date: "2026-09-25",
-    time: "16:00",
-    endTime: "18:00",
-    location: "Pondok Pesantren Sunan Pandanaran",
-    type: "Latihan Rutin",
-    status: "completed",
-    attendanceCount: 15,
-    totalPlayers: 18,
-  }
-];
+const DEFAULT_SESSIONS: TrainingSessionData[] = [];
 
 // Helper functions for Players
 export function getStoredPlayers(): PlayerData[] {

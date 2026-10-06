@@ -18,12 +18,33 @@ const PREV_SCORES: Record<string, number> = {
   'Positioning': 78, 'Decision Making': 75, 'Defensive Awareness': 70, 'Attacking Awareness': 80, 'Teamwork': 85
 };
 
-export default function EvaluationFormPage({ params }: { params: { id: string } }) {
+import { useParams } from 'next/navigation';
+import { getPlayers } from '@/lib/api';
+import type { Player } from '@/types/player';
+
+export default function EvaluationFormPage() {
+  const routeParams = useParams();
+  const playerId = (routeParams?.id as string) || '';
+  const [player, setPlayer] = useState<Player | null>(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [scores, setScores] = useState<Record<string, number>>(
     Object.keys(PREV_SCORES).reduce((acc, key) => ({ ...acc, [key]: PREV_SCORES[key] }), {})
   );
   const [notes, setNotes] = useState({ strengths: '', weaknesses: '', focus: '', general: '' });
+
+  React.useEffect(() => {
+    if (!playerId) return;
+    getPlayers()
+      .then(res => {
+        const found = res.data.find(p => String(p.id) === String(playerId));
+        if (found) setPlayer(found);
+      })
+      .catch(() => {});
+  }, [playerId]);
+
+  const playerName = player ? player.full_name : 'Pemain Futsal';
+  const playerJersey = player ? String(player.jersey_number) : '#';
+  const playerAvatar = player ? player.full_name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() : 'FT';
 
   const handleScoreChange = (skill: string, value: number) => {
     setScores(prev => ({ ...prev, [skill]: value }));
@@ -53,14 +74,14 @@ export default function EvaluationFormPage({ params }: { params: { id: string } 
         </Link>
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white font-bold text-lg shadow-lg relative">
-            BS
+            {playerAvatar}
             <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-gray-900 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white dark:border-gray-900">
-              10
+              {playerJersey}
             </div>
           </div>
           <div>
-            <h1 className="text-xl font-bold text-gray-900 dark:text-white leading-tight">Budi Santoso</h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Evaluasi Periode Oktober 2023</p>
+            <h1 className="text-xl font-bold text-gray-900 dark:text-white leading-tight">{playerName}</h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Evaluasi Performa Pemain</p>
           </div>
         </div>
       </div>

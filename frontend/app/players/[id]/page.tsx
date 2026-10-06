@@ -52,18 +52,9 @@ const TABS = [
   { id: "perkembangan", label: "Perkembangan" },
 ];
 
-const MOCK_ATTENDANCE = [
-  { id: "a1", date: "2026-10-02", time: "15:46:12", status: "present", method: "face_recognition", type: "Latihan Rutin" },
-  { id: "a2", date: "2026-09-25", time: "15:48:00", status: "present", method: "face_recognition", type: "Latihan Rutin" },
-  { id: "a3", date: "2026-09-18", time: "-", status: "absent", method: "manual", type: "Latihan Rutin" },
-  { id: "a4", date: "2026-09-11", time: "16:05:20", status: "late", method: "manual", type: "Latihan Rutin" },
-  { id: "a5", date: "2026-09-04", time: "15:50:11", status: "present", method: "face_recognition", type: "Latihan Rutin" },
-];
+const MOCK_ATTENDANCE: Array<{ id: string; date: string; time: string; status: string; method: string; type: string }> = [];
 
-const MOCK_EVALUATIONS = [
-  { id: "e1", date: "30 Sep 2026", stamina: 85, passing: 88, shooting: 90, tactical: 82, notes: "Performa sangat solid di lini serang, transisi bertahan membaik." },
-  { id: "e2", date: "15 Agu 2026", stamina: 80, passing: 82, shooting: 85, tactical: 76, notes: "Ada peningkatan stamina dan konsistensi passing pendek." },
-];
+const MOCK_EVALUATIONS: Array<{ id: string; date: string; stamina: number; passing: number; shooting: number; tactical: number; notes: string }> = [];
 
 function toPlayerData(player: Player): PlayerData {
   const positions: Record<Player["primary_position"], PlayerData["position"]> = {
@@ -443,24 +434,30 @@ export default function PlayerDetailPage() {
                 <span className="text-xs text-dark-400">Total 5 Sesi Terakhir</span>
               </div>
               <div className="divide-y divide-dark-100 dark:divide-dark-800">
-                {MOCK_ATTENDANCE.map((att) => (
-                  <div key={att.id} className="p-4 flex items-center justify-between hover:bg-dark-50 dark:hover:bg-dark-800/50 transition-colors">
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-xl bg-dark-100 dark:bg-dark-800 flex items-center justify-center font-bold text-xs text-dark-600 dark:text-dark-300">
-                        <Calendar className="w-4 h-4 text-primary-500" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-bold text-dark-900 dark:text-white">{att.type} • {att.date}</p>
-                        <p className="text-xs text-dark-400">Metode: {att.method === 'face_recognition' ? 'Otomatis Kamera' : 'Manual Pelatih'}</p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                      <span className="text-xs font-mono text-dark-400">{att.time}</span>
-                      <StatusBadge status={att.status} />
-                    </div>
+                {MOCK_ATTENDANCE.length === 0 ? (
+                  <div className="p-8 text-center text-sm text-dark-400">
+                    Belum ada riwayat kehadiran tercatat untuk pemain ini.
                   </div>
-                ))}
+                ) : (
+                  MOCK_ATTENDANCE.map((att) => (
+                    <div key={att.id} className="p-4 flex items-center justify-between hover:bg-dark-50 dark:hover:bg-dark-800/50 transition-colors">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-dark-100 dark:bg-dark-800 flex items-center justify-center font-bold text-xs text-dark-600 dark:text-dark-300">
+                          <Calendar className="w-4 h-4 text-primary-500" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-dark-900 dark:text-white">{att.type} • {att.date}</p>
+                          <p className="text-xs text-dark-400">Metode: {att.method === 'face_recognition' ? 'Otomatis Kamera' : 'Manual Pelatih'}</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        <span className="text-xs font-mono text-dark-400">{att.time}</span>
+                        <StatusBadge status={att.status} />
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           )}
@@ -478,7 +475,12 @@ export default function PlayerDetailPage() {
                 </Link>
               </div>
 
-              {MOCK_EVALUATIONS.map((ev) => (
+              {MOCK_EVALUATIONS.length === 0 ? (
+                <div className="glass bg-white dark:bg-dark-900 rounded-2xl border border-dark-200/50 dark:border-dark-800/50 p-8 text-center text-sm text-dark-400">
+                  Belum ada hasil evaluasi untuk pemain ini.
+                </div>
+              ) : (
+                MOCK_EVALUATIONS.map((ev) => (
                 <div key={ev.id} className="glass bg-white dark:bg-dark-900 rounded-2xl border border-dark-200/50 dark:border-dark-800/50 p-5 space-y-3">
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-bold text-primary-500">{ev.date}</span>
@@ -508,7 +510,8 @@ export default function PlayerDetailPage() {
                     &ldquo;{ev.notes}&rdquo;
                   </p>
                 </div>
-              ))}
+              ))
+              )}
             </div>
           )}
 

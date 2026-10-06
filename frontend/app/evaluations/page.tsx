@@ -26,28 +26,41 @@ interface CompletedEvaluation {
   trend: 'up' | 'down' | 'neutral';
 }
 
-const PENDING_MOCK: PendingEvaluation[] = [
-  { id: 'p1', name: 'Budi Santoso', jersey: 10, position: 'Pivot', lastEvalDate: '2023-09-15', avatar: 'BS' },
-  { id: 'p2', name: 'Andi Wijaya', jersey: 7, position: 'Flank', lastEvalDate: '2023-09-10', avatar: 'AW' },
-  { id: 'p3', name: 'Reza Pahlevi', jersey: 1, position: 'Kiper', lastEvalDate: null, avatar: 'RP' },
-  { id: 'p4', name: 'Dimas Anggara', jersey: 8, position: 'Anchor', lastEvalDate: '2023-08-20', avatar: 'DA' },
-  { id: 'p5', name: 'Rizky Pratama', jersey: 11, position: 'Flank', lastEvalDate: '2023-09-05', avatar: 'RPr' },
-  { id: 'p6', name: 'Surya Dharma', jersey: 5, position: 'Anchor', lastEvalDate: '2023-09-12', avatar: 'SD' },
-];
-
-const COMPLETED_MOCK: CompletedEvaluation[] = [
-  { id: 'e1', playerId: 'p7', name: 'Tono Subagyo', jersey: 9, date: '2023-10-01', overallScore: 82, summary: 'Peningkatan signifikan pada stamina dan finishing.', avatar: 'TS', trend: 'up' },
-  { id: 'e2', playerId: 'p8', name: 'Hendra Setiawan', jersey: 4, date: '2023-09-28', overallScore: 75, summary: 'Perlu fokus latihan defensive awareness.', avatar: 'HS', trend: 'down' },
-  { id: 'e3', playerId: 'p9', name: 'Agus Salim', jersey: 6, date: '2023-09-25', overallScore: 78, summary: 'Stabil. Passing sangat akurat.', avatar: 'AS', trend: 'neutral' },
-  { id: 'e4', playerId: 'p10', name: 'Bayu Saputra', jersey: 14, date: '2023-09-20', overallScore: 88, summary: 'Performa luar biasa bulan ini.', avatar: 'BSp', trend: 'up' },
-];
+import { getPlayers } from '@/lib/api';
 
 export default function EvaluationsPage() {
   const [activeTab, setActiveTab] = useState<'tertunda' | 'selesai'>('tertunda');
   const [search, setSearch] = useState('');
+  const [pendingList, setPendingList] = useState<PendingEvaluation[]>([]);
+  const [completedList, setCompletedList] = useState<CompletedEvaluation[]>([]);
 
-  const filteredPending = PENDING_MOCK.filter(p => p.name.toLowerCase().includes(search.toLowerCase()));
-  const filteredCompleted = COMPLETED_MOCK.filter(p => p.name.toLowerCase().includes(search.toLowerCase()));
+  React.useEffect(() => {
+    let mounted = true;
+    getPlayers()
+      .then(res => {
+        if (!mounted) return;
+        const posMap: Record<string, string> = {
+          goalkeeper: 'Kiper',
+          anchor: 'Anchor',
+          flank: 'Flank',
+          pivot: 'Pivot',
+        };
+        const mapped: PendingEvaluation[] = res.data.map(p => ({
+          id: String(p.id),
+          name: p.full_name,
+          jersey: Number(p.jersey_number),
+          position: posMap[p.primary_position] || p.primary_position,
+          lastEvalDate: null,
+          avatar: p.full_name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase(),
+        }));
+        setPendingList(mapped);
+      })
+      .catch(() => {});
+    return () => { mounted = false; };
+  }, []);
+
+  const filteredPending = pendingList.filter(p => p.name.toLowerCase().includes(search.toLowerCase()));
+  const filteredCompleted = completedList.filter(p => p.name.toLowerCase().includes(search.toLowerCase()));
 
   return (
     <div className="container mx-auto p-4 md:p-6 pb-24 md:pb-6 space-y-6 max-w-5xl">
@@ -72,7 +85,7 @@ export default function EvaluationsPage() {
               <Clock className="w-4 h-4" />
               <span>Tertunda</span>
               <span className="bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 py-0.5 px-2 rounded-full text-xs">
-                {PENDING_MOCK.length}
+                {pendingList.length}
               </span>
             </div>
           </button>

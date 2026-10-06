@@ -22,28 +22,14 @@ interface DeliveryLog {
   timestamp: string;
 }
 
-const NOTIFICATIONS_MOCK: Notification[] = [
-  { id: 'n1', type: 'reschedule', title: 'Perubahan Jadwal', message: 'Latihan hari ini diundur menjadi 20:00 WIB dikarenakan lapangan penuh.', timestamp: '10 menit yang lalu', isRead: false },
-  { id: 'n2', type: 'evaluation_reminder', title: 'Evaluasi Tertunda', message: 'Ada 6 pemain yang belum dievaluasi bulan ini.', timestamp: '1 jam yang lalu', isRead: false },
-  { id: 'n3', type: 'training_reminder', title: 'Pengingat Latihan', message: 'Latihan rutin di GOR Surya besok 19:00 WIB.', timestamp: 'Kemarin, 15:00', isRead: true },
-  { id: 'n4', type: 'training_reminder', title: 'Latihan Selesai', message: 'Ringkasan kehadiran latihan telah dibuat.', timestamp: '3 hari yang lalu', isRead: true },
-  { id: 'n5', type: 'evaluation_reminder', title: 'Evaluasi Selesai', message: 'Laporan evaluasi bulanan sudah tersedia.', timestamp: 'Minggu lalu', isRead: true },
-  { id: 'n6', type: 'training_reminder', title: 'Pengingat Latihan', message: 'Latihan rutin di GOR Surya.', timestamp: 'Minggu lalu', isRead: true },
-  { id: 'n7', type: 'reschedule', title: 'Latihan Dibatalkan', message: 'Latihan dibatalkan karena cuaca buruk.', timestamp: '2 minggu yang lalu', isRead: true },
-  { id: 'n8', type: 'training_reminder', title: 'Jadwal Baru', message: 'Jadwal latihan bulan depan telah diupdate.', timestamp: '3 minggu yang lalu', isRead: true },
-];
+const NOTIFICATIONS_MOCK: Notification[] = [];
 
-const LOGS_MOCK: DeliveryLog[] = [
-  { id: 'l1', recipient: 'Grup Telegram Tim', type: 'Pengingat Latihan', status: 'sent', timestamp: '14:00 WIB' },
-  { id: 'l2', recipient: 'Budi Santoso (Bot)', type: 'Pesan Personal', status: 'failed', timestamp: '13:45 WIB' },
-  { id: 'l3', recipient: 'Grup Pengurus', type: 'Laporan Kehadiran', status: 'pending', timestamp: '13:30 WIB' },
-  { id: 'l4', recipient: 'Grup Telegram Tim', type: 'Perubahan Jadwal', status: 'sent', timestamp: 'Kemarin' },
-  { id: 'l5', recipient: 'Andi Wijaya (Bot)', type: 'Hasil Evaluasi', status: 'sent', timestamp: 'Kemarin' },
-];
+const LOGS_MOCK: DeliveryLog[] = [];
 
 export default function NotificationsPage() {
   const [activeTab, setActiveTab] = useState<'semua' | 'log'>('semua');
-  const [notifications, setNotifications] = useState(NOTIFICATIONS_MOCK);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [logs] = useState<DeliveryLog[]>([]);
   
   const markAllAsRead = () => {
     setNotifications(notifications.map(n => ({ ...n, isRead: true })));
@@ -118,7 +104,12 @@ export default function NotificationsPage() {
               exit={{ opacity: 0 }}
               className="divide-y divide-gray-100 dark:divide-gray-800/50"
             >
-              {notifications.map((notif, i) => (
+              {notifications.length === 0 ? (
+                <div className="p-12 text-center text-gray-500 dark:text-gray-400">
+                  Tidak ada notifikasi saat ini.
+                </div>
+              ) : (
+                notifications.map((notif, i) => (
                 <motion.div 
                   key={notif.id}
                   initial={{ opacity: 0, y: 10 }}
@@ -149,7 +140,8 @@ export default function NotificationsPage() {
                     <div className="w-2 h-2 rounded-full bg-primary-500 flex-shrink-0 mt-2" />
                   )}
                 </motion.div>
-              ))}
+              ))
+              )}
             </motion.div>
           ) : (
             <motion.div
@@ -159,7 +151,12 @@ export default function NotificationsPage() {
               exit={{ opacity: 0 }}
               className="divide-y divide-gray-100 dark:divide-gray-800/50"
             >
-              {LOGS_MOCK.map((log, i) => (
+              {logs.length === 0 ? (
+                <div className="p-12 text-center text-gray-500 dark:text-gray-400">
+                  Tidak ada riwayat pengiriman pesan.
+                </div>
+              ) : (
+                logs.map((log, i) => (
                 <motion.div 
                   key={log.id}
                   initial={{ opacity: 0, y: 10 }}
@@ -198,7 +195,8 @@ export default function NotificationsPage() {
                     )}
                   </div>
                 </motion.div>
-              ))}
+              ))
+              )}
             </motion.div>
           )}
         </AnimatePresence>
