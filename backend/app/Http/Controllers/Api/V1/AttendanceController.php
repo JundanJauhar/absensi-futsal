@@ -16,6 +16,7 @@ class AttendanceController extends Controller
         $records = Attendance::with(['player', 'trainingSession'])
             ->when($request->filled('training_session_id'), fn ($q) => $q->where('training_session_id', $request->integer('training_session_id')))
             ->when($request->filled('player_id'), fn ($q) => $q->where('player_id', $request->integer('player_id')))
+            ->when($request->filled('class_grade'), fn ($q) => $q->whereHas('player', fn ($pq) => $pq->where('class_grade', $request->string('class_grade'))))
             ->orderBy('check_in_at')->get();
 
         return AttendanceResource::collection($records)->additional(['success' => true]);

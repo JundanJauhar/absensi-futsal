@@ -13,6 +13,7 @@ class PlayerResource extends JsonResource
             'id' => $this->id,
             'full_name' => $this->full_name,
             'jersey_number' => $this->jersey_number,
+            'class_grade' => $this->class_grade ?? '10',
             'profile_photo' => $this->resolveProfilePhoto(),
             'primary_position' => $this->primary_position,
             'secondary_position' => $this->secondary_position,

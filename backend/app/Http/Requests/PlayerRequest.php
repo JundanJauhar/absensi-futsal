@@ -26,6 +26,7 @@ class PlayerRequest extends FormRequest
                     ->where(fn ($query) => $query->where('status', 'active'))
                     ->ignore($player?->id),
             ],
+            'class_grade' => ['nullable', 'string', 'max:20'],
             'profile_photo' => ['nullable', 'image', 'max:5120'],
             'primary_position' => ['required', Rule::in(['goalkeeper', 'anchor', 'flank', 'pivot'])],
             'secondary_position' => ['nullable', Rule::in(['goalkeeper', 'anchor', 'flank', 'pivot'])],

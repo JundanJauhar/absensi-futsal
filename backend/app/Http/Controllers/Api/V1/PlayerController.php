@@ -18,6 +18,7 @@ class PlayerController extends Controller
             ->when($request->filled('search'), fn ($query) => $query->where('full_name', 'like', '%'.$request->string('search').'%'))
             ->when($request->filled('status'), fn ($query) => $query->where('status', $request->string('status')))
             ->when($request->filled('position'), fn ($query) => $query->where('primary_position', $request->string('position')))
+            ->when($request->filled('class_grade'), fn ($query) => $query->where('class_grade', $request->string('class_grade')))
             ->orderBy('jersey_number')
             ->paginate(min($request->integer('per_page', 24), 100));
 

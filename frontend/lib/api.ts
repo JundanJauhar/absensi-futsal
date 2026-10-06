@@ -81,7 +81,7 @@ export async function logout() {
   }
 }
 
-export async function getPlayers(params: { search?: string; status?: string; position?: string } = {}): Promise<PaginatedPlayers> {
+export async function getPlayers(params: { search?: string; status?: string; position?: string; class_grade?: string } = {}): Promise<PaginatedPlayers> {
   const query = new URLSearchParams({ per_page: "100" });
   Object.entries(params).forEach(([key, value]) => {
     if (value) query.set(key, value);
@@ -257,3 +257,72 @@ export async function createEvaluation(input: { player_id: number; scores: Recor
   if (!response.ok) throw new Error("EVALUATION_CREATE_FAILED");
   return (await response.json()).data;
 }
+
+export interface PlayerReportItem {
+  id: number;
+  full_name: string;
+  jersey_number: number;
+  class_grade: string;
+  primary_position: string;
+  secondary_position?: string | null;
+  primary_kick?: string;
+  status: string;
+  profile_photo?: string | null;
+  attendance: {
+    total_sessions: number;
+    present: number;
+    late: number;
+    absent: number;
+    rate: number;
+  };
+  evaluation: {
+    evaluations_count: number;
+    average_score: number | null;
+    grade_label: string;
+    latest_date: string | null;
+    latest_notes: string | null;
+  };
+}
+
+export interface ReportSummaryResponse {
+  summary: {
+    total_students: number;
+    total_sessions: number;
+    overall_attendance_rate: number;
+    overall_evaluation_score: number | null;
+    by_class: Record<string, {
+      label: string;
+      students_count: number;
+      attendance_rate: number;
+      average_score: number | null;
+    }>;
+  };
+  players: PlayerReportItem[];
+}
+
+export async function getSummaryReport(params: { class_grade?: string; start_date?: string; end_date?: string } = {}): Promise<ReportSummaryResponse> {
+  const query = new URLSearchParams();
+  if (params.class_grade && params.class_grade !== "all") query.set("class_grade", params.class_grade);
+  if (params.start_date) query.set("start_date", params.start_date);
+  if (params.end_date) query.set("end_date", params.end_date);
+  const response = await request(`/reports/summary?${query}`, { cache: "no-store" });
+  if (!response.ok) throw new Error("REPORT_UNAVAILABLE");
+  return (await response.json()).data;
+}
+
+export async function downloadReportCsv(classGrade?: string) {
+  const query = classGrade && classGrade !== "all" ? `?class_grade=${classGrade}` : "";
+  const response = await request(`/reports/summary/export${query}`);
+  if (!response.ok) throw new Error("EXPORT_FAILED");
+  const blob = await response.blob();
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  const gradeLabel = classGrade && classGrade !== "all" ? `Kelas_${classGrade}` : "Semua_Kelas";
+  a.download = `laporan_futsal_${gradeLabel}_${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  window.URL.revokeObjectURL(url);
+}
+

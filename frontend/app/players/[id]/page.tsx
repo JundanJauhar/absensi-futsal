@@ -75,6 +75,7 @@ function toPlayerData(player: Player): PlayerData {
     id: String(player.id),
     name: player.full_name,
     jersey: String(player.jersey_number),
+    classGrade: player.class_grade || "10",
     position: positions[player.primary_position],
     secondaryPosition: player.secondary_position ? positions[player.secondary_position] : undefined,
     primaryKick: kickLabels[player.primary_kick || "right"] || "Kanan",
@@ -99,6 +100,7 @@ export default function PlayerDetailPage() {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [editName, setEditName] = useState("");
   const [editJersey, setEditJersey] = useState("");
+  const [editClass, setEditClass] = useState("10");
   const [editPosition, setEditPosition] = useState<PlayerData['position']>("Flank");
   const [editKick, setEditKick] = useState<string>("Kanan");
   const [editStatus, setEditStatus] = useState<PlayerData['status']>("Aktif");
@@ -130,6 +132,7 @@ export default function PlayerDetailPage() {
         setPlayer(found);
         setEditName(found.name);
         setEditJersey(found.jersey);
+        setEditClass(found.classGrade || "10");
         setEditPosition(found.position);
         setEditKick(found.primaryKick || "Kanan");
         setEditStatus(found.status);
@@ -185,6 +188,7 @@ export default function PlayerDetailPage() {
       const updatedResponse = await updatePlayer(Number(player.id), {
         full_name: editName.trim(),
         jersey_number: Number(editJersey),
+        class_grade: editClass,
         primary_position: positions[editPosition],
         primary_kick: kickMap[editKick] || "right",
         joined_at: player.joinDate,
@@ -297,6 +301,9 @@ export default function PlayerDetailPage() {
           </div>
 
           <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mb-4">
+            <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-bold">
+              Kelas {player.classGrade || "10"}
+            </span>
             <PositionBadge position={player.position} />
             <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60 font-semibold">
               Kaki Terkuat: {player.primaryKick || "Kanan"}
@@ -694,10 +701,25 @@ export default function PlayerDetailPage() {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-3 gap-3">
                   <div>
                     <label className="block text-xs font-bold uppercase tracking-wider text-dark-700 dark:text-dark-300 mb-1">
-                      Nomor Punggung
+                      Kelas
+                    </label>
+                    <select
+                      value={editClass}
+                      onChange={(e) => setEditClass(e.target.value)}
+                      className="w-full px-3 py-3 rounded-xl bg-dark-50 dark:bg-dark-950 border border-dark-200 dark:border-dark-800 text-dark-900 dark:text-white text-sm focus:outline-none focus:border-primary-500"
+                    >
+                      <option value="10">Kelas 10</option>
+                      <option value="11">Kelas 11</option>
+                      <option value="12">Kelas 12</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-dark-700 dark:text-dark-300 mb-1">
+                      No. Punggung
                     </label>
                     <input
                       type="number"
@@ -706,7 +728,7 @@ export default function PlayerDetailPage() {
                       max="99"
                       value={editJersey}
                       onChange={(e) => setEditJersey(e.target.value)}
-                      className="w-full px-4 py-3 rounded-xl bg-dark-50 dark:bg-dark-950 border border-dark-200 dark:border-dark-800 text-dark-900 dark:text-white text-sm focus:outline-none focus:border-primary-500"
+                      className="w-full px-3 py-3 rounded-xl bg-dark-50 dark:bg-dark-950 border border-dark-200 dark:border-dark-800 text-dark-900 dark:text-white text-sm focus:outline-none focus:border-primary-500"
                     />
                   </div>
 
@@ -717,7 +739,7 @@ export default function PlayerDetailPage() {
                     <select
                       value={editStatus}
                       onChange={(e) => setEditStatus(e.target.value as PlayerData['status'])}
-                      className="w-full px-4 py-3 rounded-xl bg-dark-50 dark:bg-dark-950 border border-dark-200 dark:border-dark-800 text-dark-900 dark:text-white text-sm focus:outline-none focus:border-primary-500"
+                      className="w-full px-3 py-3 rounded-xl bg-dark-50 dark:bg-dark-950 border border-dark-200 dark:border-dark-800 text-dark-900 dark:text-white text-sm focus:outline-none focus:border-primary-500"
                     >
                       <option value="Aktif">Aktif</option>
                       <option value="Nonaktif">Nonaktif</option>

@@ -19,6 +19,7 @@ import {
   Activity,
   Zap,
   BookOpen,
+  FileSpreadsheet,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -31,6 +32,7 @@ const mainNav = [
 ];
 
 const moreMenu = [
+  { href: "/reports", label: "Laporan", icon: FileSpreadsheet },
   { href: "/evaluations", label: "Evaluasi", icon: ChartBar },
   { href: "/meeting-notes", label: "Buku Latihan", icon: BookOpen },
   { href: "/notifications", label: "Notifikasi", icon: Bell },
@@ -42,6 +44,7 @@ const sidebarNav = [
   { href: "/players", label: "Pemain", icon: Users },
   { href: "/training", label: "Latihan", icon: Calendar },
   { href: "/attendance", label: "Absensi", icon: ClipboardCheck },
+  { href: "/reports", label: "Laporan", icon: FileSpreadsheet },
   { href: "/evaluations", label: "Evaluasi", icon: ChartBar },
   { href: "/meeting-notes", label: "Buku Latihan", icon: BookOpen },
   { href: "/notifications", label: "Notifikasi", icon: Bell },

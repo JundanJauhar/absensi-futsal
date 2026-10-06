@@ -3,6 +3,7 @@ export interface PlayerData {
   id: string;
   name: string;
   jersey: string;
+  classGrade?: string;
   position: 'Kiper' | 'Anchor' | 'Flank' | 'Pivot';
   secondaryPosition?: string;
   primaryKick?: 'Kanan' | 'Kiri' | 'Kedua Kaki' | string;

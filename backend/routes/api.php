@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\V1\AttendanceController;
 use App\Http\Controllers\Api\V1\EvaluationController;
 use App\Http\Controllers\Api\V1\DashboardController;
 use App\Http\Controllers\Api\V1\FaceController;
+use App\Http\Controllers\Api\V1\ReportController;
 
 Route::prefix('v1')->group(function () {
     Route::get('/health', fn () => response()->json([
@@ -45,6 +46,8 @@ Route::prefix('v1')->group(function () {
         Route::get('/players/{player}/evaluations', [EvaluationController::class, 'playerEvaluations']);
         Route::get('/players/{player}/development', [EvaluationController::class, 'development']);
         Route::post('/training/sessions/{session}/reschedule', [TrainingController::class, 'reschedule']);
+        Route::get('/reports/summary', [ReportController::class, 'summary']);
+        Route::get('/reports/summary/export', [ReportController::class, 'exportCsv']);
         Route::get('/players/{player}/audit-logs', function (\App\Models\Player $player) {
             return response()->json([
                 'success' => true,

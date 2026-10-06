@@ -21,6 +21,7 @@ import type { Player } from "@/types/player";
 import type { PlayerData } from "@/lib/dataStore";
 
 const POSITIONS = ["Semua", "Kiper", "Anchor", "Flank", "Pivot"] as const;
+const CLASSES = ["Semua", "Kelas 10", "Kelas 11", "Kelas 12"] as const;
 const STATUSES = ["Semua", "Aktif", "Nonaktif"] as const;
 
 function toPlayerData(player: Player): PlayerData {
@@ -42,6 +43,7 @@ function toPlayerData(player: Player): PlayerData {
     id: String(player.id),
     name: player.full_name,
     jersey: String(player.jersey_number),
+    classGrade: player.class_grade || "10",
     position: positions[player.primary_position],
     secondaryPosition: player.secondary_position ? positions[player.secondary_position] : undefined,
     primaryKick: kickLabels[player.primary_kick || "right"] || "Kanan",
@@ -72,6 +74,7 @@ export default function PlayersPage() {
   const [players, setPlayers] = useState<PlayerData[]>([]);
   const [search, setSearch] = useState("");
   const [filterPosition, setFilterPosition] = useState<string>("Semua");
+  const [filterClass, setFilterClass] = useState<string>("Semua");
   const [filterStatus, setFilterStatus] = useState<string>("Semua");
   const [isLoading, setIsLoading] = useState(true);
 
@@ -79,6 +82,7 @@ export default function PlayersPage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [formName, setFormName] = useState("");
   const [formJersey, setFormJersey] = useState("");
+  const [formClass, setFormClass] = useState<string>("10");
   const [formPosition, setFormPosition] = useState<PlayerData['position']>("Flank");
   const [formKick, setFormKick] = useState<string>("Kanan");
   const [formPhoto, setFormPhoto] = useState<string>("");
@@ -155,6 +159,7 @@ export default function PlayersPage() {
       const createdResponse = await createPlayer({
         full_name: formName.trim(),
         jersey_number: Number(formJersey),
+        class_grade: formClass,
         primary_position: positions[formPosition],
         primary_kick: kickMap[formKick] || "right",
         joined_at: new Date().toISOString().split("T")[0],
@@ -172,6 +177,7 @@ export default function PlayersPage() {
     // Reset form
     setFormName("");
     setFormJersey("");
+    setFormClass("10");
     setFormPosition("Flank");
     setFormKick("Kanan");
     setFormPhoto("");
@@ -186,9 +192,12 @@ export default function PlayersPage() {
                           player.jersey.includes(search);
       const matchPosition = filterPosition === "Semua" || player.position === filterPosition;
       const matchStatus = filterStatus === "Semua" || player.status === filterStatus;
-      return matchSearch && matchPosition && matchStatus;
+      const matchClass = filterClass === "Semua" || 
+                         `Kelas ${player.classGrade}` === filterClass || 
+                         player.classGrade === filterClass.replace("Kelas ", "");
+      return matchSearch && matchPosition && matchStatus && matchClass;
     });
-  }, [players, search, filterPosition, filterStatus]);
+  }, [players, search, filterPosition, filterStatus, filterClass]);
 
   return (
     <div className="space-y-6">
@@ -228,6 +237,25 @@ export default function PlayersPage() {
         </div>
         
         <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex flex-wrap gap-2 items-center">
+            <span className="text-sm text-dark-500 dark:text-dark-400 mr-1 hidden sm:inline-block">Kelas:</span>
+            {CLASSES.map(cls => (
+              <button
+                key={cls}
+                onClick={() => setFilterClass(cls)}
+                className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+                  filterClass === cls 
+                    ? "bg-primary-100 text-primary-700 dark:bg-primary-900/40 dark:text-primary-400 font-bold" 
+                    : "bg-dark-50 text-dark-600 hover:bg-dark-100 dark:bg-dark-800 dark:text-dark-300 dark:hover:bg-dark-700"
+                }`}
+              >
+                {cls}
+              </button>
+            ))}
+          </div>
+
+          <div className="h-px w-full sm:h-full sm:w-px bg-dark-200 dark:bg-dark-700 mx-1"></div>
+
           <div className="flex flex-wrap gap-2 items-center">
             <span className="text-sm text-dark-500 dark:text-dark-400 mr-1 hidden sm:inline-block">Posisi:</span>
             {POSITIONS.map(pos => (
@@ -307,6 +335,9 @@ export default function PlayersPage() {
                       
                       <div className="flex flex-col items-center gap-1.5 mt-2">
                         <div className="flex items-center gap-1.5 flex-wrap justify-center">
+                          <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold border border-emerald-500/20">
+                            Kelas {player.classGrade || "10"}
+                          </span>
                           <PositionBadge position={player.position} />
                           <span className="text-[11px] px-2 py-0.5 rounded-full bg-dark-100 dark:bg-dark-800 text-dark-600 dark:text-dark-300 font-semibold border border-dark-200/50 dark:border-dark-700/50">
                             Kaki {player.primaryKick || "Kanan"}
@@ -415,10 +446,25 @@ export default function PlayersPage() {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-3 gap-3">
                   <div>
                     <label className="block text-xs font-bold uppercase tracking-wider text-dark-700 dark:text-dark-300 mb-1">
-                      Nomor Punggung <span className="text-rose-500">*</span>
+                      Kelas <span className="text-rose-500">*</span>
+                    </label>
+                    <select
+                      value={formClass}
+                      onChange={(e) => setFormClass(e.target.value)}
+                      className="w-full px-3 py-3 rounded-xl bg-dark-50 dark:bg-dark-950 border border-dark-200 dark:border-dark-800 text-dark-900 dark:text-white text-sm focus:outline-none focus:border-primary-500 transition-colors"
+                    >
+                      <option value="10">Kelas 10</option>
+                      <option value="11">Kelas 11</option>
+                      <option value="12">Kelas 12</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-dark-700 dark:text-dark-300 mb-1">
+                      No. Punggung <span className="text-rose-500">*</span>
                     </label>
                     <input
                       type="number"
@@ -428,18 +474,18 @@ export default function PlayersPage() {
                       max="99"
                       value={formJersey}
                       onChange={(e) => setFormJersey(e.target.value)}
-                      className="w-full px-4 py-3 rounded-xl bg-dark-50 dark:bg-dark-950 border border-dark-200 dark:border-dark-800 text-dark-900 dark:text-white text-sm focus:outline-none focus:border-primary-500 transition-colors"
+                      className="w-full px-3 py-3 rounded-xl bg-dark-50 dark:bg-dark-950 border border-dark-200 dark:border-dark-800 text-dark-900 dark:text-white text-sm focus:outline-none focus:border-primary-500 transition-colors"
                     />
                   </div>
 
                   <div>
                     <label className="block text-xs font-bold uppercase tracking-wider text-dark-700 dark:text-dark-300 mb-1">
-                      Posisi Utama <span className="text-rose-500">*</span>
+                      Posisi <span className="text-rose-500">*</span>
                     </label>
                     <select
                       value={formPosition}
                       onChange={(e) => setFormPosition(e.target.value as PlayerData['position'])}
-                      className="w-full px-4 py-3 rounded-xl bg-dark-50 dark:bg-dark-950 border border-dark-200 dark:border-dark-800 text-dark-900 dark:text-white text-sm focus:outline-none focus:border-primary-500 transition-colors"
+                      className="w-full px-3 py-3 rounded-xl bg-dark-50 dark:bg-dark-950 border border-dark-200 dark:border-dark-800 text-dark-900 dark:text-white text-sm focus:outline-none focus:border-primary-500 transition-colors"
                     >
                       <option value="Kiper">Kiper</option>
                       <option value="Anchor">Anchor</option>

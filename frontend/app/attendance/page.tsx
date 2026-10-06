@@ -38,6 +38,7 @@ interface PlayerAttendanceRow {
   id: string;
   name: string;
   jerseyNumber: string | number;
+  classGrade: string;
   avatarUrl?: string;
   checkInTime?: string;
   status: AttendanceStatus;
@@ -70,6 +71,7 @@ export default function AttendanceHistoryPage() {
   const [sessions, setSessions] = useState<DisplaySession[]>([]);
   const [selectedSessionId, setSelectedSessionId] = useState<string>('');
   const [players, setPlayers] = useState<PlayerData[]>([]);
+  const [activeClassFilter, setActiveClassFilter] = useState<'semua' | '10' | '11' | '12'>('semua');
   const [activeFilter, setActiveFilter] = useState<'semua' | AttendanceStatus>('semua');
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
@@ -90,6 +92,7 @@ export default function AttendanceHistoryPage() {
       id: String(player.id),
       name: player.full_name,
       jersey: String(player.jersey_number),
+      classGrade: player.class_grade || '10',
       position: ({ goalkeeper: 'Kiper', anchor: 'Anchor', flank: 'Flank', pivot: 'Pivot' } as const)[player.primary_position],
       secondaryPosition: player.secondary_position ? ({ goalkeeper: 'Kiper', anchor: 'Anchor', flank: 'Flank', pivot: 'Pivot' } as const)[player.secondary_position] : undefined,
       primaryKick: ({ right: 'Kanan', left: 'Kiri', both: 'Kedua Kaki' } as const)[player.primary_kick as 'right' | 'left' | 'both'] || 'Kanan',
@@ -242,6 +245,7 @@ export default function AttendanceHistoryPage() {
           id: pId,
           name: p.name,
           jerseyNumber: p.jersey,
+          classGrade: p.classGrade || '10',
           avatarUrl: p.avatarUrl,
           checkInTime: att.time,
           status: isLate ? 'terlambat' : 'hadir',
@@ -252,6 +256,7 @@ export default function AttendanceHistoryPage() {
           id: pId,
           name: p.name,
           jerseyNumber: p.jersey,
+          classGrade: p.classGrade || '10',
           avatarUrl: p.avatarUrl,
           checkInTime: undefined,
           status: 'absen',
@@ -261,34 +266,41 @@ export default function AttendanceHistoryPage() {
     });
   }, [selectedSession, currentAttendances, players]);
 
-  // Filtered rows
+  // Class filtered rows (used for class-specific statistics & display)
+  const classPlayerRows = useMemo(() => {
+    if (activeClassFilter === 'semua') return playerRows;
+    return playerRows.filter(p => p.classGrade === activeClassFilter);
+  }, [playerRows, activeClassFilter]);
+
+  // Filtered rows for list display
   const filteredPlayers = useMemo(() => {
-    return playerRows.filter(player => {
+    return classPlayerRows.filter(player => {
       const matchesFilter = activeFilter === 'semua' || player.status === activeFilter;
       const matchesSearch = 
         player.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         String(player.jerseyNumber).includes(searchQuery);
       return matchesFilter && matchesSearch;
     });
-  }, [playerRows, activeFilter, searchQuery]);
+  }, [classPlayerRows, activeFilter, searchQuery]);
 
-  // Dynamic Statistics
+  // Dynamic Statistics computed for the selected class
   const stats = useMemo(() => {
-    const totalPresent = playerRows.filter(p => p.status === 'hadir').length;
-    const totalLate = playerRows.filter(p => p.status === 'terlambat').length;
-    const totalAbsent = playerRows.filter(p => p.status === 'absen').length;
+    const totalPresent = classPlayerRows.filter(p => p.status === 'hadir').length;
+    const totalLate = classPlayerRows.filter(p => p.status === 'terlambat').length;
+    const totalAbsent = classPlayerRows.filter(p => p.status === 'absen').length;
     const attendedCount = totalPresent + totalLate;
-    const totalPlayersCount = playerRows.length || 18;
+    const totalPlayersCount = classPlayerRows.length;
     const attendanceRate = totalPlayersCount > 0 ? Math.round((attendedCount / totalPlayersCount) * 100) : 0;
 
     return {
       totalSessions: sessions.length,
+      totalStudents: totalPlayersCount,
       attendanceRate,
       totalPresent,
       totalLate,
       totalAbsent,
     };
-  }, [sessions, playerRows]);
+  }, [sessions, classPlayerRows]);
 
   if (loading) {
     return (
@@ -327,6 +339,7 @@ export default function AttendanceHistoryPage() {
       {/* Stats Scrollable Bar (Real Data) */}
       <div className="flex overflow-x-auto pb-2 gap-4 scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0">
         <StatCard title="Total Sesi" value={stats.totalSessions} unit="Sesi" icon={CalendarDays} />
+        <StatCard title={activeClassFilter === 'semua' ? 'Total Siswa' : `Siswa Kelas ${activeClassFilter}`} value={stats.totalStudents} unit="Orang" icon={Users} />
         <StatCard title="Tingkat Kehadiran" value={stats.attendanceRate} unit="%" icon={CheckCircle2} />
         <StatCard title="Hadir Tepat Waktu" value={stats.totalPresent} icon={UserCheck} />
         <StatCard title="Terlambat" value={stats.totalLate} icon={Clock} />
@@ -404,6 +417,49 @@ export default function AttendanceHistoryPage() {
         {/* Attendance List (Right Panel) */}
         <div className="lg:col-span-3 space-y-4">
           
+          {/* Class Filter Tabs */}
+          <div className="glass p-2 rounded-2xl flex items-center justify-between gap-2 border border-dark-200 dark:border-dark-800 bg-white/50 dark:bg-dark-900/50">
+            <div className="flex items-center gap-1.5 overflow-x-auto w-full scrollbar-hide py-0.5">
+              <span className="text-xs font-bold uppercase tracking-wider text-dark-400 dark:text-dark-500 px-2 shrink-0">Kelas:</span>
+              <button
+                onClick={() => setActiveClassFilter('semua')}
+                className={clsx(
+                  "px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap",
+                  activeClassFilter === 'semua'
+                    ? "bg-primary-500 text-white shadow-md shadow-primary-500/20"
+                    : "text-dark-600 dark:text-dark-300 hover:bg-dark-100 dark:hover:bg-dark-800"
+                )}
+              >
+                Semua Kelas ({playerRows.length})
+              </button>
+              {(['10', '11', '12'] as const).map(cls => {
+                const countInClass = playerRows.filter(p => p.classGrade === cls).length;
+                return (
+                  <button
+                    key={cls}
+                    onClick={() => setActiveClassFilter(cls)}
+                    className={clsx(
+                      "px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5",
+                      activeClassFilter === cls
+                        ? "bg-primary-500 text-white shadow-md shadow-primary-500/20"
+                        : "text-dark-600 dark:text-dark-300 hover:bg-dark-100 dark:hover:bg-dark-800"
+                    )}
+                  >
+                    <span>Kelas {cls}</span>
+                    <span className={clsx(
+                      "text-[10px] px-1.5 py-0.2 rounded-full font-mono",
+                      activeClassFilter === cls
+                        ? "bg-white/20 text-white"
+                        : "bg-dark-200 dark:bg-dark-700 text-dark-500 dark:text-dark-300"
+                    )}>
+                      {countInClass}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           {/* Controls Bar */}
           <div className="glass p-3.5 rounded-2xl flex flex-col sm:flex-row gap-3 justify-between items-start sm:items-center border border-dark-200 dark:border-dark-800">
             <div className="flex flex-wrap gap-2">
@@ -453,8 +509,13 @@ export default function AttendanceHistoryPage() {
                       <div className="col-span-5 md:col-span-4 flex items-center gap-3 min-w-0">
                         <PlayerAvatar photo={player.avatarUrl} name={player.name} size="sm" />
                         <div className="min-w-0">
-                          <div className="font-bold text-dark-900 dark:text-white truncate text-sm">
-                            {player.name}
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="font-bold text-dark-900 dark:text-white truncate text-sm">
+                              {player.name}
+                            </span>
+                            <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-primary-500/10 text-primary-600 dark:text-primary-400 border border-primary-500/20 shrink-0">
+                              Kelas {player.classGrade}
+                            </span>
                           </div>
                           <div className="text-[11px] text-dark-400 font-mono">
                             #{player.jerseyNumber}

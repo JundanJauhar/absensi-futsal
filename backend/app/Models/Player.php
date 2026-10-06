@@ -14,6 +14,7 @@ class Player extends Model
     protected $fillable = [
         'full_name',
         'jersey_number',
+        'class_grade',
         'profile_photo',
         'primary_position',
         'secondary_position',
